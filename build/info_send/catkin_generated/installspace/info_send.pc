@@ -1,4 +1,4 @@
-prefix=/home/chenxx/orbslaminfo/install
+prefix=/home/chenxx/modify0906/image_tran/install
 
 Name: info_send
 Description: Description of info_send

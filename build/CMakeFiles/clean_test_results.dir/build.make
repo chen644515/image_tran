@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/chenxx/orbslaminfo/src
+CMAKE_SOURCE_DIR = /home/chenxx/modify0906/image_tran/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/chenxx/orbslaminfo/build
+CMAKE_BINARY_DIR = /home/chenxx/modify0906/image_tran/build
 
 # Utility rule file for clean_test_results.
 
@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/chenxx/orbslaminfo/build
 include CMakeFiles/clean_test_results.dir/progress.make
 
 CMakeFiles/clean_test_results:
-	/usr/bin/python3 /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/chenxx/orbslaminfo/build/test_results
+	/usr/bin/python3 /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/chenxx/modify0906/image_tran/build/test_results
 
 clean_test_results: CMakeFiles/clean_test_results
 clean_test_results: CMakeFiles/clean_test_results.dir/build.make
@@ -71,6 +71,6 @@ CMakeFiles/clean_test_results.dir/clean:
 .PHONY : CMakeFiles/clean_test_results.dir/clean
 
 CMakeFiles/clean_test_results.dir/depend:
-	cd /home/chenxx/orbslaminfo/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chenxx/orbslaminfo/src /home/chenxx/orbslaminfo/src /home/chenxx/orbslaminfo/build /home/chenxx/orbslaminfo/build /home/chenxx/orbslaminfo/build/CMakeFiles/clean_test_results.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/chenxx/modify0906/image_tran/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chenxx/modify0906/image_tran/src /home/chenxx/modify0906/image_tran/src /home/chenxx/modify0906/image_tran/build /home/chenxx/modify0906/image_tran/build /home/chenxx/modify0906/image_tran/build/CMakeFiles/clean_test_results.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : CMakeFiles/clean_test_results.dir/depend
 

@@ -7,8 +7,6 @@
 # new environment variables
 
 # modified environment variables
-export CMAKE_PREFIX_PATH="/home/chenxx/orbslaminfo/devel:$CMAKE_PREFIX_PATH"
-export LD_LIBRARY_PATH="/home/chenxx/orbslaminfo/devel/lib:$LD_LIBRARY_PATH"
-export PKG_CONFIG_PATH="/home/chenxx/orbslaminfo/devel/lib/pkgconfig:$PKG_CONFIG_PATH"
-export PWD='/home/chenxx/orbslaminfo/build'
-export ROS_PACKAGE_PATH='/home/chenxx/orbslaminfo/src:/home/chenxx/catkin_ws/src:/opt/ros/noetic/share'
+export CMAKE_PREFIX_PATH="/home/chenxx/modify0906/image_tran/devel:$CMAKE_PREFIX_PATH"
+export PWD='/home/chenxx/modify0906/image_tran/build'
+export ROS_PACKAGE_PATH="/home/chenxx/modify0906/image_tran/src:$ROS_PACKAGE_PATH"

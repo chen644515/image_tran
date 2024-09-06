@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/chenxx/orbslaminfo/devel/lib/info_send/imu_rev"
-  "/home/chenxx/orbslaminfo/devel/lib/info_send/imu_rev.pdb"
+  "/home/chenxx/modify0906/image_tran/devel/lib/info_send/imu_rev"
+  "/home/chenxx/modify0906/image_tran/devel/lib/info_send/imu_rev.pdb"
   "CMakeFiles/imu_rev.dir/src/imu_rev.cpp.o"
 )
 

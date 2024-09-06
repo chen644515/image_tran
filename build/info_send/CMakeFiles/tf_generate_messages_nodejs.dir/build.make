@@ -43,10 +43,10 @@ RM = /usr/bin/cmake -E remove -f
 EQUALS = =
 
 # The top-level source directory on which CMake was run.
-CMAKE_SOURCE_DIR = /home/chenxx/orbslaminfo/src
+CMAKE_SOURCE_DIR = /home/chenxx/modify0906/image_tran/src
 
 # The top-level build directory on which CMake was run.
-CMAKE_BINARY_DIR = /home/chenxx/orbslaminfo/build
+CMAKE_BINARY_DIR = /home/chenxx/modify0906/image_tran/build
 
 # Utility rule file for tf_generate_messages_nodejs.
 
@@ -63,10 +63,10 @@ info_send/CMakeFiles/tf_generate_messages_nodejs.dir/build: tf_generate_messages
 .PHONY : info_send/CMakeFiles/tf_generate_messages_nodejs.dir/build
 
 info_send/CMakeFiles/tf_generate_messages_nodejs.dir/clean:
-	cd /home/chenxx/orbslaminfo/build/info_send && $(CMAKE_COMMAND) -P CMakeFiles/tf_generate_messages_nodejs.dir/cmake_clean.cmake
+	cd /home/chenxx/modify0906/image_tran/build/info_send && $(CMAKE_COMMAND) -P CMakeFiles/tf_generate_messages_nodejs.dir/cmake_clean.cmake
 .PHONY : info_send/CMakeFiles/tf_generate_messages_nodejs.dir/clean
 
 info_send/CMakeFiles/tf_generate_messages_nodejs.dir/depend:
-	cd /home/chenxx/orbslaminfo/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chenxx/orbslaminfo/src /home/chenxx/orbslaminfo/src/info_send /home/chenxx/orbslaminfo/build /home/chenxx/orbslaminfo/build/info_send /home/chenxx/orbslaminfo/build/info_send/CMakeFiles/tf_generate_messages_nodejs.dir/DependInfo.cmake --color=$(COLOR)
+	cd /home/chenxx/modify0906/image_tran/build && $(CMAKE_COMMAND) -E cmake_depends "Unix Makefiles" /home/chenxx/modify0906/image_tran/src /home/chenxx/modify0906/image_tran/src/info_send /home/chenxx/modify0906/image_tran/build /home/chenxx/modify0906/image_tran/build/info_send /home/chenxx/modify0906/image_tran/build/info_send/CMakeFiles/tf_generate_messages_nodejs.dir/DependInfo.cmake --color=$(COLOR)
 .PHONY : info_send/CMakeFiles/tf_generate_messages_nodejs.dir/depend
 

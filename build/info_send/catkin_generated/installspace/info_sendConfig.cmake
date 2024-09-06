@@ -67,14 +67,14 @@ set(info_send_CONFIG_INCLUDED TRUE)
 
 # set variables for source/devel/install prefixes
 if("FALSE" STREQUAL "TRUE")
-  set(info_send_SOURCE_PREFIX /home/chenxx/orbslaminfo/src/info_send)
-  set(info_send_DEVEL_PREFIX /home/chenxx/orbslaminfo/devel)
+  set(info_send_SOURCE_PREFIX /home/chenxx/modify0906/image_tran/src/info_send)
+  set(info_send_DEVEL_PREFIX /home/chenxx/modify0906/image_tran/devel)
   set(info_send_INSTALL_PREFIX "")
   set(info_send_PREFIX ${info_send_DEVEL_PREFIX})
 else()
   set(info_send_SOURCE_PREFIX "")
   set(info_send_DEVEL_PREFIX "")
-  set(info_send_INSTALL_PREFIX /home/chenxx/orbslaminfo/install)
+  set(info_send_INSTALL_PREFIX /home/chenxx/modify0906/image_tran/install)
   set(info_send_PREFIX ${info_send_INSTALL_PREFIX})
 endif()
 
@@ -154,7 +154,7 @@ foreach(library ${libraries})
     set(lib_path "")
     set(lib "${library}-NOTFOUND")
     # since the path where the library is found is returned we have to iterate over the paths manually
-    foreach(path /home/chenxx/orbslaminfo/install/lib;/home/chenxx/catkin_ws/devel/lib;/opt/ros/noetic/lib)
+    foreach(path /home/chenxx/modify0906/image_tran/install/lib;/home/chenxx/orbslaminfo0906/devel/lib;/home/chenxx/catkin_ws/devel/lib;/opt/ros/noetic/lib)
       find_library(lib ${library}
         PATHS ${path}
         NO_DEFAULT_PATH NO_CMAKE_FIND_ROOT_PATH)

@@ -6,7 +6,6 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <ctime>
-
 #include <gst/gst.h>
 #include <gst/app/gstappsink.h>
 #include <ros/ros.h>
@@ -15,24 +14,19 @@
 #include <signal.h>
 #include <sensor_msgs/CameraInfo.h>
 
-// #include "threadpool.hpp"
 
 using namespace cv;
 using namespace std;
 
-bool should_exit = false;
-void signalHandler(int signum)
-{
-    ROS_INFO("Received exit signal. Exiting the while loop.");
-    should_exit = true;
-}
+ros::Time timestamp;         // 发送图片时间戳
 
-
-uint8_t flag = 0;
-
-#define SERVER_IP "127.0.0.1"
-// #define PORT1 12349
-int a;
+std::queue<int> socketq;
+struct time_st{                                     
+    uint32_t nec;
+    uint32_t snec;
+};
+time_st t;
+#define SERVER_IP "127.0.0.1"     // 发送方IP
 
 class ImageRev {
 public:
@@ -42,6 +36,7 @@ public:
     int run();
     ~ImageRev() {
         // 关闭套接字
+        std::cout << "detele imagerev successfully\n";
         close(newSocket);
         close(serverSock);
     }
@@ -61,6 +56,7 @@ int ImageRev::init()
 {
     // 创建 TCP 套接字
     serverSock = socket(AF_INET, SOCK_STREAM, 0);
+    socketq.push(serverSock);
 
     // 设置服务器地址
     serverAddr.sin_family = AF_INET;
@@ -79,6 +75,7 @@ int ImageRev::init()
     // 等待客户端连接
     addr_size = sizeof(serverStorage);
     newSocket = accept(serverSock, (struct sockaddr *) &serverStorage, &addr_size);
+    socketq.push(newSocket);
     cout << "Client connected" << endl;
     return 0;
 }
@@ -87,36 +84,36 @@ int ImageRev::run()
 {
     uint32_t imgSize;
     int ret = 0;
-    vector<uchar> head(8);
-    for (int i = 0; i < 8; i++) {
+    vector<uchar> head(16);
+    for (int i = 0; i < 16; i++) {
         uchar s;
         ret = recv(newSocket, &s, 1, 0);
-        // if (ret != 1) {, left_image, right_image, left_image, right_image, left_image, right_image
-        //     std::cout << "error\n";
-        // }
         head[i] = s;
     }
    
     std::cout << "rev head successfully\n";
     imgSize = (static_cast<uint16_t>(head[7]) << 24) | (static_cast<uint16_t>(head[6]) << 16) | (static_cast<uint16_t>(head[5]) << 8) | static_cast<uint16_t>(head[4]);
+    t.nec = (static_cast<uint16_t>(head[11]) << 24) | (static_cast<uint16_t>(head[10]) << 16) | (static_cast<uint16_t>(head[9]) << 8) | static_cast<uint16_t>(head[8]);
+    t.snec = (static_cast<uint16_t>(head[15]) << 24) | (static_cast<uint16_t>(head[14]) << 16) | (static_cast<uint16_t>(head[13]) << 8) | static_cast<uint16_t>(head[12]);
+    std::cout << "dddd\n";
     vector<uchar> buffer(imgSize);
-    // if (recv(newSocket, buffer.data(), imgSize, 0) <= 0) {
-    //     std::cout << "rev image failed\n";
-    //     continue;
-    // }
     for (int i = 0; i < imgSize; i++) {
         uchar s;
+        // std::cout << "imagerev start\n";
         if (recv(newSocket, &s, 1, 0) <= 0) {
-            // std::cout << "rev data failed\n";
+            std::cout << "imagerev in\n";
+            while (!socketq.empty()) {
+                int sock = socketq.front();
+                socketq.pop();
+                int i = close(sock);
+                cout << i << '\n';
+            }
+            exit(1);
         }
         buffer[i] = s;
     }
-    // std::cout << "buffer.data:\n";
-    // for (int i = imgSize - 1; i >= 0; i--) cout << buffer[i] << '\n';
-    // std::cout << "\n\n\n";
     // 解码图像数据
     try {
-        // std::cout << buffer.size() << '\n';
         image = imdecode(buffer, IMREAD_GRAYSCALE);
         if (image.empty()) {
             cerr << "Error: Failed to decode image." << endl;
@@ -130,19 +127,16 @@ int ImageRev::run()
         close(serverSock);
         return 1;
     }
-    // cv::resize(image, image, cv::Size(image.cols * 2, image.rows * 2));
     return 0;
 }
 
-// #define SERVER_IP "127.0.0.1"
-// #define PORT 12348
-// #define BUFFER_SIZE 1024
 class AskSend{
 public:
     AskSend(const char *IP, uint16_t p);
     int init();
     int askSend(string &ask);
     ~AskSend() {
+        std::cout << "detele asksend successfully\n";
         close(this->sock);
     }
 private:
@@ -160,6 +154,7 @@ AskSend::AskSend(const char *IP, uint16_t p) :serverIP(IP)
 int AskSend::init()
 {
     sock = socket(AF_INET, SOCK_STREAM, 0);
+    socketq.push(sock);
     if (sock == -1) {
         std::cout << "sock failded\n";
     }
@@ -171,7 +166,6 @@ int AskSend::init()
     }
 
     if (connect(sock, (struct sockaddr *)&serverAddr, sizeof(serverAddr)) == -1) {
-        std::cout << "Error: Connection failed.\n";
         close(sock);
         return 1;
     }
@@ -185,9 +179,15 @@ int AskSend::askSend(string &ask)
     for (int i = 0; i < ask.size(); i++) {
         buffer[i] = ask[i];
     }
-    if (send(sock, buffer.data(), buffer.size(), 0) == -1) {
+    if (send(sock, buffer.data(), buffer.size(), 0) < 0) {
         std::cout << "Error: Failed to send image data.\n";
-        return -1;
+         while (!socketq.empty()) {
+            int sock = socketq.front();
+            socketq.pop();
+            int i = close(sock);
+            cout << i << '\n';
+        }
+        exit(0);
     }
     return 0;
 }
@@ -195,8 +195,6 @@ int AskSend::askSend(string &ask)
 
 
 int main(int argc, char **argv) {
-
-    // std::signal(SIGINT, signalHandler);
     ros::init(argc, argv, "image_publisher");
     ros::NodeHandle nh;
     ros::Publisher image_pub_left = nh.advertise<sensor_msgs::Image>("/camera/color/image_left", 10);
@@ -236,243 +234,206 @@ int main(int argc, char **argv) {
     msg_right.roi.height = 0;
     msg_right.roi.width = 0;
     msg_right.roi.do_rectify = false;
+    {
+        ImageRev imgrev1(8881);
+        ImageRev imgrev2(8882);
+        ImageRev imgrev3(8883);
+        ImageRev imgrev4(8884);
+        ImageRev imgrev5(8885);
+        ImageRev imgrev6(8886);
+        ImageRev imgrev7(8887);
+        ImageRev imgrev8(8888);
 
+        if (imgrev1.init() != 0) {
+            std::cout << "imgrev1 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev1 successfully\n";
+        }
 
-    ImageRev imgrev1(8881);
-    ImageRev imgrev2(8882);
-    ImageRev imgrev3(8883);
-    ImageRev imgrev4(8884);
-    ImageRev imgrev5(8885);
-    ImageRev imgrev6(8886);
-    ImageRev imgrev7(8887);
-    ImageRev imgrev8(8888);
+        if (imgrev2.init() != 0) {
+            std::cout << "imgrev2 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev2 successfully\n";
+        }
 
-    if (imgrev1.init() != 0) {
-        std::cout << "imgrev1 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev1 successfully\n";
-    }
+        if (imgrev3.init() != 0) {
+            std::cout << "imgrev3 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev3 successfully\n";
+        }
 
-    if (imgrev2.init() != 0) {
-        std::cout << "imgrev2 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev2 successfully\n";
-    }
+        if (imgrev4.init() != 0) {
+            std::cout << "imgrev4 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev4 successfully\n";
+        }
 
-    if (imgrev3.init() != 0) {
-        std::cout << "imgrev3 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev3 successfully\n";
-    }
+        if (imgrev5.init() != 0) {
+            std::cout << "imgrev5 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev5 successfully\n";
+        }
 
-    if (imgrev4.init() != 0) {
-        std::cout << "imgrev4 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev4 successfully\n";
-    }
+        if (imgrev6.init() != 0) {
+            std::cout << "imgrev6 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev6 successfully\n";
+        }
 
-    if (imgrev5.init() != 0) {
-        std::cout << "imgrev5 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev5 successfully\n";
-    }
+        if (imgrev7.init() != 0) {
+            std::cout << "imgrev7 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev7 successfully\n";
+        }
 
-    if (imgrev6.init() != 0) {
-        std::cout << "imgrev6 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev6 successfully\n";
-    }
+        if (imgrev8.init() != 0) {
+            std::cout << "imgrev8 failed\n";
+            return 1;
+        } else {
+            std::cout << "imgrev48 successfully\n";
+        }
+        std::cout << "d1\n";
+        usleep(2000000);
+        AskSend asksend1(SERVER_IP, 9991);
+        AskSend asksend2(SERVER_IP, 9992);
+        AskSend asksend3(SERVER_IP, 9993);
+        AskSend asksend4(SERVER_IP, 9994);
+        AskSend asksend5(SERVER_IP, 9995);
+        AskSend asksend6(SERVER_IP, 9996);
+        AskSend asksend7(SERVER_IP, 9997);
+        AskSend asksend8(SERVER_IP, 9998);
+        std::cout << "successfully\n";
 
-    if (imgrev7.init() != 0) {
-        std::cout << "imgrev7 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev7 successfully\n";
-    }
+        while (asksend1.init() != 0) {
 
-    if (imgrev8.init() != 0) {
-        std::cout << "imgrev8 failed\n";
-        return 1;
-    } else {
-        std::cout << "imgrev48 successfully\n";
-    }
-    std::cout << "d1\n";
-    usleep(2000000);
-    AskSend asksend1(SERVER_IP, 9991);
-    AskSend asksend2(SERVER_IP, 9992);
-    AskSend asksend3(SERVER_IP, 9993);
-    AskSend asksend4(SERVER_IP, 9994);
-    AskSend asksend5(SERVER_IP, 9995);
-    AskSend asksend6(SERVER_IP, 9996);
-    AskSend asksend7(SERVER_IP, 9997);
-    AskSend asksend8(SERVER_IP, 9998);
-    std::cout << "successfully\n";
-    if (asksend1.init() != 0) {
-        std::cout << "asksend1 failed\n";
-        return 1;
-    } else {
+        }
         std::cout << "asksend1 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend2.init() != 0) {
-        std::cout << "asksend2 failed\n";
-        return 1;
-    } else {
+        // usleep(1000000);
+        while (asksend2.init() != 0) {
+
+        }
         std::cout << "asksend2 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend3.init() != 0) {
-        std::cout << "asksend4 failed\n";
-        return 1;
-    } else {
+        // usleep(1000000);
+        while (asksend3.init() != 0) {
+
+        }
+        std::cout << "asksend3 successfully\n";
+        // usleep(1000000);
+        while (asksend4.init() != 0) {
+
+        }
         std::cout << "asksend4 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend4.init() != 0) {
-        std::cout << "asksend4 failed\n";
-        return 1;
-    } else {
-        std::cout << "asksend4 successfully\n";
-    }
-    usleep(1000000);
-     if (asksend5.init() != 0) {
-        std::cout << "asksend5 failed\n";
-        return 1;
-    } else {
+        // usleep(1000000);
+        while (asksend5.init() != 0) {
+
+        }
         std::cout << "asksend5 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend6.init() != 0) {
-        std::cout << "asksend6 failed\n";
-        return 1;
-    } else {
+        // usleep(1000000);
+        while (asksend6.init() != 0) {
+
+        }
         std::cout << "asksend6 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend7.init() != 0) {
-        std::cout << "asksend7 failed\n";
-        return 1;
-    } else {
-        std::cout << "asksend7 successfully\n";
-    }
-    usleep(1000000);
-    if (asksend8.init() != 0) {
-        std::cout << "asksend8 failed\n";
-        return 1;
-    } else {
-        std::cout << "asksend8 successfully\n";
-    }
-
-    //创建线程池
-    // threadpool<ImageRev> *pool = NULL;
-    // try
-    // {
-    //     pool = new threadpool<ImageRev>(8, 8);
-    // }
-    // catch (...)
-    // {
-    //     return 1;
-    // }
-    std::cout << "d2\n";
-    string s = "OK";
+        // usleep(1000000);
+        while (asksend7.init() != 0) {
     
-    cv::Mat img1;
-    cv::Mat img2;
-    cv::Mat img3;
-    cv::Mat img4;
-    cv::Mat img_left;
-    cv::Mat img_right;
-    // 接收图像大小
-    int count = 0;
-    time_t timestamp1 = time(nullptr);
-    while (ros::ok()) {
-        if (imgrev1.run() != 0 ||
-            imgrev2.run() != 0 ||
-            imgrev3.run() != 0 ||
-            imgrev4.run() != 0 ||
-            imgrev5.run() != 0 ||
-            imgrev6.run() != 0 ||
-            imgrev7.run() != 0 ||
-            imgrev8.run() != 0 ) {
-            std::cout << "error exit\n";
-            break;
         }
-        // pool->append(&imgrev1);
-        // pool->append(&imgrev2);
-        // pool->append(&imgrev3);
-        // pool->append(&imgrev4);
-        // pool->append(&imgrev5);
-        // pool->append(&imgrev6);
-        // pool->append(&imgrev7);
-        // pool->append(&imgrev8);
-
-        if (asksend1.askSend(s) != 0 ||
-            asksend2.askSend(s) != 0 ||
-            asksend3.askSend(s) != 0 ||
-            asksend4.askSend(s) != 0 ||
-            asksend5.askSend(s) != 0 ||
-            asksend6.askSend(s) != 0 ||
-            asksend7.askSend(s) != 0 ||
-            asksend8.askSend(s) != 0 ) {
-            std::cout << "error1 exit\n";
-            break;
+        std::cout << "asksend7 successfully\n";
+        // usleep(1000000);
+        while (asksend8.init() != 0) {
+    
         }
-        cv::hconcat(imgrev1.image, imgrev2.image, img1);
-        cv::hconcat(imgrev3.image, imgrev4.image, img2);
-        cv::hconcat(imgrev5.image, imgrev6.image, img3);
-        cv::hconcat(imgrev7.image, imgrev8.image, img4);
-        cv::vconcat(img1, img2, img_right);
-        cv::vconcat(img3, img4, img_left);
+        std::cout << "asksend8 successfully\n";
 
-        ros::Time time_now = ros::Time::now();
-        cv_bridge::CvImage cv_image_rgb_left;
-        cv_image_rgb_left.image = img_left;
-        cv_image_rgb_left.encoding = "mono8";
-        sensor_msgs::Image ros_image_rgb_left;
-        cv_image_rgb_left.toImageMsg(ros_image_rgb_left);
-        ros_image_rgb_left.header.frame_id = "camera_color_optical_frame_left";
-        ros_image_rgb_left.header.seq = count;
-        ros_image_rgb_left.header.stamp = time_now; 
-
-        cv_bridge::CvImage cv_image_rgb_right;
-        cv_image_rgb_right.image = img_right;
-        cv_image_rgb_right.encoding = "mono8";
-        sensor_msgs::Image ros_image_rgb_right;
-        cv_image_rgb_right.toImageMsg(ros_image_rgb_right);
-        ros_image_rgb_right.header.frame_id = "camera_color_optical_frame_right";
-        ros_image_rgb_right.header.seq = count;
-        ros_image_rgb_right.header.stamp = time_now; 
-
-        msg_left.header.seq = count;
-        msg_left.header.stamp = time_now;
-
-        msg_right.header.seq = count;
-        msg_right.header.stamp = time_now;
+        string s = "OK";
         
-        image_pub_left.publish(ros_image_rgb_left);
-        image_pub_right.publish(ros_image_rgb_right);
-        info_pub_left.publish(msg_left);
-        info_pub_right.publish(msg_right);
+        cv::Mat img1;
+        cv::Mat img2;
+        cv::Mat img3;
+        cv::Mat img4;
+        cv::Mat img_left;
+        cv::Mat img_right;
+        // 接收图像大小
+        int count = 0;
+        time_t timestamp1 = time(nullptr);
+        while (ros::ok()) {
+            if (imgrev1.run() != 0 ||
+                imgrev2.run() != 0 ||
+                imgrev3.run() != 0 ||
+                imgrev4.run() != 0 ||
+                imgrev5.run() != 0 ||
+                imgrev6.run() != 0 ||
+                imgrev7.run() != 0 ||
+                imgrev8.run() != 0 ) {
+                std::cout << "error exit\n";
+                break;
+            }
 
+            if (asksend1.askSend(s) != 0 ||
+                asksend2.askSend(s) != 0 ||
+                asksend3.askSend(s) != 0 ||
+                asksend4.askSend(s) != 0 ||
+                asksend5.askSend(s) != 0 ||
+                asksend6.askSend(s) != 0 ||
+                asksend7.askSend(s) != 0 ||
+                asksend8.askSend(s) != 0 ) {
+                std::cout << "error1 exit\n";
+                break;
+            }
+            cv::hconcat(imgrev1.image, imgrev2.image, img1);
+            cv::hconcat(imgrev3.image, imgrev4.image, img2);
+            cv::hconcat(imgrev5.image, imgrev6.image, img3);
+            cv::hconcat(imgrev7.image, imgrev8.image, img4);
+            cv::vconcat(img1, img2, img_right);
+            cv::vconcat(img3, img4, img_left);
 
-        // cv::hconcat(img, img4, img);
-        // cv::imshow("image", img);
-        // 按ESC键退出循环
-        if (cv::waitKey(1) == 27) {
-            break;
+            timestamp.sec = t.nec;
+            timestamp.nsec = t.snec;
+
+            cout << "timestamp:" << timestamp.sec << ' ' << timestamp.nsec << '\n';
+
+            ros::Time time_now = timestamp;
+            cv_bridge::CvImage cv_image_rgb_left;
+            cv_image_rgb_left.image = img_left;
+            cv_image_rgb_left.encoding = "mono8";
+            sensor_msgs::Image ros_image_rgb_left;
+            cv_image_rgb_left.toImageMsg(ros_image_rgb_left);
+            ros_image_rgb_left.header.frame_id = "camera_color_optical_frame_left";
+            ros_image_rgb_left.header.seq = count;
+            ros_image_rgb_left.header.stamp = time_now; 
+
+            cv_bridge::CvImage cv_image_rgb_right;
+            cv_image_rgb_right.image = img_right;
+            cv_image_rgb_right.encoding = "mono8";
+            sensor_msgs::Image ros_image_rgb_right;
+            cv_image_rgb_right.toImageMsg(ros_image_rgb_right);
+            ros_image_rgb_right.header.frame_id = "camera_color_optical_frame_right";
+            ros_image_rgb_right.header.seq = count;
+            ros_image_rgb_right.header.stamp = time_now; 
+
+            msg_left.header.seq = count;
+            msg_left.header.stamp = time_now;
+
+            msg_right.header.seq = count;
+            msg_right.header.stamp = time_now;
+            
+            image_pub_left.publish(ros_image_rgb_left);
+            image_pub_right.publish(ros_image_rgb_right);
+            info_pub_left.publish(msg_left);
+            info_pub_right.publish(msg_right);
+
+            if (cv::waitKey(1) == 27) {
+                break;
+            }
+            count++;
         }
-        // std::cout << "count" << count << "***************************\n";
-        count++;
-        // if (count == 1000) break;
+        time_t timestamp2 = time(nullptr);
     }
-    time_t timestamp2 = time(nullptr);
-    std::cout << timestamp2 - timestamp1 << '\n';
-    // delete pool;
     return 0;
 }

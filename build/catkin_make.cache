@@ -1,2 +1,2 @@
 info_send
--DCATKIN_DEVEL_PREFIX=/home/chenxx/orbslaminfo/devel -DCMAKE_INSTALL_PREFIX=/home/chenxx/orbslaminfo/install -G Unix Makefiles
+-DCATKIN_DEVEL_PREFIX=/home/chenxx/modify0906/image_tran/devel -DCMAKE_INSTALL_PREFIX=/home/chenxx/modify0906/image_tran/install -G Unix Makefiles

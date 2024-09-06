@@ -4,7 +4,7 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
-  "/home/chenxx/orbslaminfo/src/info_send/src/imu_rev.cpp" "/home/chenxx/orbslaminfo/build/info_send/CMakeFiles/imu_rev.dir/src/imu_rev.cpp.o"
+  "/home/chenxx/modify0906/image_tran/src/info_send/src/imu_rev.cpp" "/home/chenxx/modify0906/image_tran/build/info_send/CMakeFiles/imu_rev.dir/src/imu_rev.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 
@@ -20,7 +20,7 @@ set(CMAKE_CXX_TARGET_INCLUDE_PATH
   "/opt/ros/noetic/include"
   "/opt/ros/noetic/share/xmlrpcpp/cmake/../../../include/xmlrpcpp"
   "/usr/include/opencv4"
-  "/home/chenxx/orbslaminfo/src/info_send/./include"
+  "/home/chenxx/modify0906/image_tran/src/info_send/./include"
   "/usr/include/gstreamer-1.0"
   "/usr/include/glib-2.0"
   "/usr/lib/x86_64-linux-gnu/glib-2.0/include"

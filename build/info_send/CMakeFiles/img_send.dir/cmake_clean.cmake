@@ -1,6 +1,6 @@
 file(REMOVE_RECURSE
-  "/home/chenxx/orbslaminfo/devel/lib/info_send/img_send"
-  "/home/chenxx/orbslaminfo/devel/lib/info_send/img_send.pdb"
+  "/home/chenxx/modify0906/image_tran/devel/lib/info_send/img_send"
+  "/home/chenxx/modify0906/image_tran/devel/lib/info_send/img_send.pdb"
   "CMakeFiles/img_send.dir/src/img_send.cpp.o"
 )
 

@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/chenxx/orbslaminfo/src/info_send/include/locker.hpp
+/home/chenxx/modify0906/image_tran/src/info_send/include/locker.hpp
 exception
 -
 pthread.h
@@ -14,7 +14,7 @@ pthread.h
 semaphore.h
 -
 
-/home/chenxx/orbslaminfo/src/info_send/include/threadpool.hpp
+/home/chenxx/modify0906/image_tran/src/info_send/include/threadpool.hpp
 list
 -
 cstdio
@@ -24,9 +24,9 @@ exception
 pthread.h
 -
 ./locker.hpp
-/home/chenxx/orbslaminfo/src/info_send/include/locker.hpp
+/home/chenxx/modify0906/image_tran/src/info_send/include/locker.hpp
 
-/home/chenxx/orbslaminfo/src/info_send/src/img_send.cpp
+/home/chenxx/modify0906/image_tran/src/info_send/src/img_send.cpp
 ros/ros.h
 -
 sensor_msgs/Image.h
@@ -48,7 +48,7 @@ vector
 iostream
 -
 threadpool.hpp
-/home/chenxx/orbslaminfo/src/info_send/src/threadpool.hpp
+/home/chenxx/modify0906/image_tran/src/info_send/src/threadpool.hpp
 
 /opt/ros/noetic/include/cv_bridge/cv_bridge.h
 sensor_msgs/Image.h

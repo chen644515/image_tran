@@ -6,7 +6,7 @@
 
 #IncludeRegexTransform: 
 
-/home/chenxx/orbslaminfo/src/info_send/src/imu_rev.cpp
+/home/chenxx/modify0906/image_tran/src/info_send/src/imu_rev.cpp
 iostream
 -
 cstring
